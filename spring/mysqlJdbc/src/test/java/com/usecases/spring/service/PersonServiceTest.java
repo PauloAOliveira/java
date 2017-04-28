@@ -3,6 +3,7 @@ package com.usecases.spring.service;
 import com.github.javafaker.Faker;
 import com.usecases.spring.domain.DocumentType;
 import com.usecases.spring.domain.Person;
+import com.usecases.spring.domain.PersonRepresentation;
 import com.usecases.spring.exception.BadRequestException;
 import com.usecases.spring.exception.NotFoundException;
 import com.usecases.spring.repository.PersonRepository;
@@ -154,9 +155,16 @@ public class PersonServiceTest {
 
         when(personRepository.getById(eq(person.getId()))).thenReturn(Optional.of(person));
 
-        Person resp = personService.getById(person.getId());
+        PersonRepresentation resp = personService.getById(person.getId());
 
-        assertTrue(EqualsBuilder.reflectionEquals(person, resp));
+        assertEquals(person.getDocumentType(), resp.getDocumentType());
+        assertEquals(person.getDocumentNumber(), resp.getDocumentNumber());
+        assertEquals(person.getFirstName(), resp.getFirstName());
+        assertEquals(person.getLastName(), resp.getLastName());
+        assertEquals(person.getEmail(), resp.getEmail());
+        assertEquals(person.getBirthDate(), resp.getBirthDate());
+        assertEquals(person.getCreated(), resp.getCreated());
+        assertEquals(person.getLastUpdate(), resp.getLastUpdate());
     }
 
     @Test(expected = NotFoundException.class)

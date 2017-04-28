@@ -1,6 +1,5 @@
 package com.usecases.spring.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.usecases.spring.domain.groups.Create;
 import com.usecases.spring.domain.groups.Update;
 import com.usecases.spring.validator.constraint.Past;
@@ -14,7 +13,6 @@ import java.time.LocalDateTime;
 
 public class Person implements Serializable{
 
-    @JsonIgnore
     private static final long serialVersionUID = -3550498220222748157L;
 
     private Long id;

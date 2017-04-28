@@ -161,7 +161,7 @@ public class PersonControllerTest {
         mockMvc.perform(
                 post("/people").contentType(MediaType.APPLICATION_JSON).content(json)
         ).andExpect(status().isCreated())
-                .andExpect(jsonPath("$.href", is("/people/"+id)))
+                .andExpect(jsonPath("$.href", is("http://localhost/people/"+id)))
                 .andExpect(jsonPath("$.rel", is("self")));
     }
 
@@ -197,7 +197,7 @@ public class PersonControllerTest {
         mockMvc.perform(
                 put("/people/{personId}", id).contentType(MediaType.APPLICATION_JSON).content(json)
         ).andExpect(status().isOk())
-                .andExpect(jsonPath("$.href", is("/people/"+id)))
+                .andExpect(jsonPath("$.href", is("http://localhost/people/"+id)))
                 .andExpect(jsonPath("$.rel", is("self")));
 
         verify(personService, times(1)).update(eq(id), any(Person.class));

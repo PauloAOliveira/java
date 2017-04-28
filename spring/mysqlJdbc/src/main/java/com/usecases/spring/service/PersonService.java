@@ -1,5 +1,6 @@
 package com.usecases.spring.service;
 
+import com.usecases.spring.domain.PersonRepresentation;
 import com.usecases.spring.exception.BadRequestException;
 import com.usecases.spring.exception.NotFoundException;
 import com.usecases.spring.validator.DocumentValidator;
@@ -16,9 +17,10 @@ public class PersonService {
     @Autowired
     private PersonRepository personRepository;
 
-    public Person getById(Long id) {
+    public PersonRepresentation getById(Long id) {
         Optional<Person> op = personRepository.getById(id);
-        return op.orElseThrow(() -> new NotFoundException("Person does not exist"));
+        Person p = op.orElseThrow(() -> new NotFoundException("Person does not exist"));
+        return PersonRepresentation.of(p);
     }
 
     public Long save(Person person){

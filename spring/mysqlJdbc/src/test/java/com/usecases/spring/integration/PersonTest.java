@@ -6,15 +6,16 @@ import com.usecases.spring.Commons;
 import com.usecases.spring.MysqlJdbcApplication;
 import com.usecases.spring.domain.DocumentType;
 import com.usecases.spring.domain.Person;
-import com.usecases.spring.response.Link;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.hateoas.Link;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -29,6 +30,7 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -45,6 +47,9 @@ public class PersonTest implements Serializable {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @LocalServerPort
+    int randomServerPort;
 
     private Faker faker;
 
@@ -119,7 +124,7 @@ public class PersonTest implements Serializable {
 
         Link link = response.getBody();
         assertEquals("self", link.getRel());
-        assertEquals("/people/"+after.getId(), link.getHref());
+        assertEquals("http://localhost:"+randomServerPort+"/people/"+after.getId(), link.getHref());
     }
 
     @Test
@@ -186,7 +191,7 @@ public class PersonTest implements Serializable {
 
         Link link = response.getBody();
         assertEquals("self", link.getRel());
-        assertEquals("/people/"+after.getId(), link.getHref());
+        assertEquals("http://localhost:"+randomServerPort+"/people/"+after.getId(), link.getHref());
     }
 
     @Test
@@ -212,6 +217,7 @@ public class PersonTest implements Serializable {
         assertEquals("{\"errors\":[{\"error\":\"Person does not exist\"}]}", response.getBody());
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void getById() throws IOException {
         Person before = findById(6L);
@@ -219,9 +225,23 @@ public class PersonTest implements Serializable {
         ResponseEntity<String> response = restTemplate.exchange("/people/{personId}", HttpMethod.GET, new HttpEntity<>(httpHeaders), String.class, 6L);
         assertEquals(200, response.getStatusCodeValue());
 
-        Person after = objectMapper.readValue(response.getBody(), Person.class);
+        Map<String, Object> after = objectMapper.readValue(response.getBody(), Map.class);
 
-        assertTrue(EqualsBuilder.reflectionEquals(before, after));
+        assertEquals(before.getDocumentType().toString(), after.get("documentType"));
+        assertEquals(before.getDocumentNumber(), after.get("documentNumber"));
+        assertEquals(before.getFirstName(), after.get("firstName"));
+        assertEquals(before.getLastName(), after.get("lastName"));
+        assertEquals(before.getEmail(), after.get("email"));
+        assertEquals(before.getBirthDate().toString(), after.get("birthDate").toString());
+        assertEquals(before.getCreated().toString(), after.get("created").toString());
+        assertEquals(before.getLastUpdate().toString(), after.get("lastUpdate").toString());
+
+        Map<String, Object> links = (Map<String, Object>) after.get("_links");
+        assertEquals(1, links.size());
+
+        Map<String, String> link = (Map<String, String>) links.get("self");
+        assertEquals(1, link.size());
+        assertEquals("http://localhost:"+randomServerPort+"/people/6", link.get("href"));
     }
 
     @Test

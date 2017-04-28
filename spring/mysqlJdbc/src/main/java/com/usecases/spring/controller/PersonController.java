@@ -1,12 +1,13 @@
 package com.usecases.spring.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.usecases.spring.domain.Person;
+import com.usecases.spring.domain.PersonRepresentation;
 import com.usecases.spring.domain.groups.Create;
 import com.usecases.spring.domain.groups.Update;
-import com.usecases.spring.response.Link;
 import com.usecases.spring.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -20,24 +21,27 @@ public class PersonController {
     @Autowired
     private PersonService personService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @PostMapping()
     public ResponseEntity<Link> createPerson(@RequestBody @Validated(Create.class) Person person){
         Long id = personService.save(person);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new Link(String.format("/people/%d", id)));
+        return ResponseEntity.status(HttpStatus.CREATED).body(getLinkById(id));
     }
 
     @PutMapping(value = "/{id}")
     public ResponseEntity<Link> updatePerson(@PathVariable Long id, @RequestBody @Validated(Update.class) Person person) {
         personService.update(id, person);
-        return ResponseEntity.ok(new Link(String.format("/people/%d", id)));
+        return ResponseEntity.ok(getLinkById(id));
     }
 
     @GetMapping(value = "/{id}")
-    public Person getById(@PathVariable Long id) {
-        return personService.getById(id);
+    public ResponseEntity<PersonRepresentation> getById(@PathVariable Long id) {
+        PersonRepresentation person = personService.getById(id);
+        person.add(ControllerLinkBuilder.linkTo(PersonController.class).slash(id).withSelfRel());
+        return ResponseEntity.ok(person);
+    }
+
+    private Link getLinkById(Long id) {
+        return ControllerLinkBuilder.linkTo(PersonController.class).slash(id).withSelfRel();
     }
 
     @DeleteMapping(value = "/{id}")
