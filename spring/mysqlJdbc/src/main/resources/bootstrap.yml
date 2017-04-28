@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: mysqlJdbc
+  cloud:
+    config:
+      uri: http://localhost:8081
