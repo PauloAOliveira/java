@@ -14,6 +14,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.Optional;
 
 @Repository
@@ -62,7 +63,7 @@ public class PersonRepository extends BaseRepository{
     public Long create(Person person) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         PreparedStatementCreator statement = c -> {
-            PreparedStatement ps = c.prepareStatement(INSERT);
+            PreparedStatement ps = c.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, person.getDocumentType().name());
             ps.setString(2, person.getDocumentNumber());
             ps.setString(3, person.getFirstName());
