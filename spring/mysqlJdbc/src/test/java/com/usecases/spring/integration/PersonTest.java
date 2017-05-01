@@ -21,6 +21,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -30,6 +31,7 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -37,7 +39,7 @@ import static org.junit.Assert.*;
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @SpringBootTest(classes = {MysqlJdbcApplication.class, Commons.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class PersonTest implements Serializable {
+public class PersonTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -49,11 +51,27 @@ public class PersonTest implements Serializable {
     private ObjectMapper objectMapper;
 
     @LocalServerPort
-    int randomServerPort;
+    private int randomServerPort;
 
     private Faker faker;
 
     private HttpHeaders httpHeaders;
+
+    private RowMapper<Person> mapper = (resultSet, i) -> {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        Person preLoaded = new Person();
+        preLoaded.setId(resultSet.getLong("id"));
+        preLoaded.setDocumentType(DocumentType.valueOf(resultSet.getString("documentType")));
+        preLoaded.setDocumentNumber(resultSet.getString("documentNumber"));
+        preLoaded.setFirstName(resultSet.getString("firstName"));
+        preLoaded.setLastName(resultSet.getString("lastName"));
+        preLoaded.setEmail(resultSet.getString("email"));
+        preLoaded.setBirthDate(LocalDate.parse(resultSet.getString("birthDate")));
+        preLoaded.setCreated(LocalDateTime.parse(resultSet.getString("created").replaceAll("\\.[^.]*$", ""), formatter));
+        preLoaded.setLastUpdate(LocalDateTime.parse(resultSet.getString("lastUpdate").replaceAll("\\.[^.]*$", ""), formatter));
+        preLoaded.setDeleted(resultSet.getBoolean("deleted"));
+        return preLoaded;
+    };
 
     @Before
     public void setup() {
@@ -63,40 +81,18 @@ public class PersonTest implements Serializable {
     }
 
     private Person findByDocument(String doc) {
-        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet("select * from Person where documentNumber = ?", doc);
-        sqlRowSet.first();
-
-        return mapper(sqlRowSet);
+        return jdbcTemplate.queryForObject("select * from Person where documentNumber = ?", mapper, doc);
     }
 
     private Person findById(Long id ) {
-        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet("select * from Person where id = ?", id);
-        sqlRowSet.first();
-
-        return mapper(sqlRowSet);
-    }
-
-    private Person mapper(SqlRowSet sqlRowSet) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        Person preLoaded = new Person();
-        preLoaded.setId(sqlRowSet.getLong("id"));
-        preLoaded.setDocumentType(DocumentType.valueOf(sqlRowSet.getString("documentType")));
-        preLoaded.setDocumentNumber(sqlRowSet.getString("documentNumber"));
-        preLoaded.setFirstName(sqlRowSet.getString("firstName"));
-        preLoaded.setLastName(sqlRowSet.getString("lastName"));
-        preLoaded.setEmail(sqlRowSet.getString("email"));
-        preLoaded.setBirthDate(LocalDate.parse(sqlRowSet.getString("birthDate")));
-        preLoaded.setCreated(LocalDateTime.parse(sqlRowSet.getString("created").replaceAll("\\.[^.]*$", ""), formatter));
-        preLoaded.setLastUpdate(LocalDateTime.parse(sqlRowSet.getString("lastUpdate").replaceAll("\\.[^.]*$", ""), formatter));
-        preLoaded.setDeleted(sqlRowSet.getBoolean("deleted"));
-        return preLoaded;
+        return jdbcTemplate.queryForObject("select * from Person where id = ?", mapper, id);
     }
 
     @Test
     public void createPerson() {
         String documentNumber = "781.744.673-35";
-        String firstName = faker.name().firstName();
-        String lastName = faker.name().lastName();
+        String firstName = faker.lorem().characters(4, 30);
+        String lastName = faker.lorem().characters(4, 45);
         String email = faker.internet().emailAddress();
         String birthDate = LocalDate.now().minusDays(1).toString();
         String json = String.format(
@@ -130,8 +126,8 @@ public class PersonTest implements Serializable {
     @Test
     public void createPersonWithExistingDocument() {
         String documentNumber = "01403379386";
-        String firstName = faker.name().firstName();
-        String lastName = faker.name().lastName();
+        String firstName = faker.lorem().characters(4, 30);
+        String lastName = faker.lorem().characters(4, 45);
         String email = faker.internet().emailAddress();
         String birthDate = LocalDate.now().minusDays(1).toString();
         String json = String.format(
@@ -197,8 +193,8 @@ public class PersonTest implements Serializable {
     @Test
     public void updatePersonNotExist() {
         String documentNumber = "8762jhfu827";
-        String firstName = faker.name().firstName();
-        String lastName = faker.name().lastName();
+        String firstName = faker.lorem().characters(4, 30);
+        String lastName = faker.lorem().characters(4, 45);
         String email = faker.internet().emailAddress();
         String birthDate = LocalDate.now().minusDays(1).toString();
         String json = String.format(

@@ -1,0 +1,1 @@
+INSERT INTO brand (name, description, created_date, modified_date) VALUES ('brand one', 'description one', '2017-01-01 01:01:01','2017-02-02 02:02:02');

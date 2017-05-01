@@ -1,5 +1,9 @@
 package com.usecases.spring.domain;
 
+import com.github.javafaker.Faker;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.RandomUtils;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.time.LocalDate;
@@ -9,15 +13,22 @@ import static org.junit.Assert.*;
 
 public class PersonRepresentationTest {
 
+    private Faker faker;
+
+    @Before
+    public void setup() {
+        faker = new Faker();
+    }
+
     @Test
     public void of() throws Exception {
-        String documentNumber = "25896547412";
-        String first = "First";
-        String last = "Last";
-        String email = "email@email.com";
+        String documentNumber = RandomStringUtils.randomNumeric(11);
+        String first = faker.name().firstName();
+        String last = faker.name().lastName();
+        String email = faker.internet().emailAddress();
         LocalDateTime created = LocalDateTime.of(2000, 1, 2, 3, 4, 5);
         LocalDateTime lastUpdate = LocalDateTime.of(2001, 2, 3, 4, 5, 6);
-        Boolean deleted = Boolean.TRUE;
+        Boolean deleted = RandomUtils.nextInt(1, 11) % 2 == 0;
 
         Person person = new Person();
         person.setId(123L);

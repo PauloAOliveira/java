@@ -1,6 +1,8 @@
 package com.usecases.spring.service;
 
 import com.usecases.spring.domain.PersonRepresentation;
+import com.usecases.spring.domain.exception.InvalidDocumentException;
+import com.usecases.spring.domain.exception.PersonNotFoundException;
 import com.usecases.spring.exception.BadRequestException;
 import com.usecases.spring.exception.NotFoundException;
 import com.usecases.spring.validator.DocumentValidator;
@@ -18,14 +20,14 @@ public class PersonService {
     private PersonRepository personRepository;
 
     public PersonRepresentation getById(Long id) {
-        Optional<Person> op = personRepository.getById(id);
-        Person p = op.orElseThrow(() -> new NotFoundException("Person does not exist"));
+        Person p = personRepository.getById(id)
+                .orElseThrow(PersonNotFoundException::new);
         return PersonRepresentation.of(p);
     }
 
     public Long save(Person person){
         if(!DocumentValidator.isValid(person.getDocumentType().toString(), person.getDocumentNumber())){
-            throw new BadRequestException("Document must be valid");
+            throw new InvalidDocumentException();
         }
         person.setDocumentNumber(person.getDocumentNumber().replaceAll("\\D+", ""));
         return personRepository.create(person);
@@ -43,7 +45,7 @@ public class PersonService {
 
     private void validateIfExist(Long id) {
         if(!personRepository.exist(id)) {
-            throw new NotFoundException("Person does not exist");
+            throw new PersonNotFoundException();
         }
     }
 }

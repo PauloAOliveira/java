@@ -33,7 +33,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ActiveProfiles({"test"})
 public class PersonControllerTest {
 
     @Mock
@@ -181,8 +180,8 @@ public class PersonControllerTest {
 
     @Test
     public void updatePerson() throws Exception {
-        String firstName = faker.name().firstName();
-        String lastName = faker.name().lastName();
+        String firstName = faker.lorem().characters(4, 30);
+        String lastName = faker.lorem().characters(4, 45);
         String email = faker.internet().emailAddress();
         String json = String.format(
                 "{" +
