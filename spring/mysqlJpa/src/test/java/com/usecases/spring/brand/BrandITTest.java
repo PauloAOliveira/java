@@ -25,7 +25,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.io.IOException;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
@@ -90,15 +90,16 @@ public class BrandITTest {
         assertEquals(description, after.getDescription());
 
         assertEquals("self", link.getRel());
-        assertEquals("http://localhost:"+randomServerPort+"/brands/"+after.getId(), link.getHref());
+        assertEquals(String.format("http://localhost:%d/brands/%d",randomServerPort, after.getId()), link.getHref());
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void getById() throws IOException {
-        Brand before = findById(1L);
+        Long id = 1L;
+        Brand before = findById(id);
 
-        ResponseEntity<String> response = restTemplate.exchange("/brands/{brandId}", HttpMethod.GET, new HttpEntity<>(httpHeaders), String.class, 1L);
+        ResponseEntity<String> response = restTemplate.exchange("/brands/{brandId}", HttpMethod.GET, new HttpEntity<>(httpHeaders), String.class, id);
         assertEquals(200, response.getStatusCodeValue());
 
         Map<String, Object> after = objectMapper.readValue(response.getBody(), Map.class);
@@ -111,7 +112,7 @@ public class BrandITTest {
 
         Map<String, String> link = (Map<String, String>) links.get("self");
         assertEquals(1, link.size());
-        assertEquals("http://localhost:"+randomServerPort+"/brands/1", link.get("href"));
+        assertEquals(String.format("http://localhost:%d/brands/%d",randomServerPort, id), link.get("href"));
     }
 
     @SuppressWarnings("unchecked")
@@ -120,5 +121,62 @@ public class BrandITTest {
         ResponseEntity<String> response = restTemplate.exchange("/brands/{brandId}", HttpMethod.GET, new HttpEntity<>(httpHeaders), String.class, 999L);
         assertEquals(404, response.getStatusCodeValue());
         assertEquals("{\"errors\":[{\"error\":\"Brand does not exist\"}]}", response.getBody());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void updateNotFound() throws IOException {
+        String body = "{\"name\":\"any name\"}";
+        ResponseEntity<String> response = restTemplate.exchange("/brands/{brandId}", HttpMethod.PUT, new HttpEntity<>(body, httpHeaders), String.class, 999L);
+        assertEquals(404, response.getStatusCodeValue());
+        assertEquals("{\"errors\":[{\"error\":\"Brand does not exist\"}]}", response.getBody());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void updateNameAndDescription() throws IOException {
+        Long id = 2L;
+        Brand before = findById(id);
+
+        String newName = "updated name";
+        String newDescription = "updated description";
+
+        String body = String.format("{\"name\":\"%s\",\"description\":\"%s\"}", newName, newDescription);
+        ResponseEntity<String> response = restTemplate.exchange("/brands/{brandId}", HttpMethod.PUT, new HttpEntity<>(body, httpHeaders), String.class, id);
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(String.format("{\"rel\":\"self\",\"href\":\"http://localhost:%d/brands/%d\"}",randomServerPort, id), response.getBody());
+
+        Brand after = findById(id);
+
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
+
+        assertNotEquals(before.getName(), responseBody.get("name"));
+        assertNotEquals(before.getDescription(), responseBody.get("description"));
+        assertEquals(after.getName(), newName);
+        assertEquals(after.getDescription(), newDescription);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void updateDescriptionToNull() throws IOException {
+        Long id = 3L;
+        Brand before = findById(id);
+
+        String newName = "updated name";
+
+        String body = String.format("{\"name\":\"%s\"}", newName);
+        ResponseEntity<String> response = restTemplate.exchange("/brands/{brandId}", HttpMethod.PUT, new HttpEntity<>(body, httpHeaders), String.class, id);
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(String.format("{\"rel\":\"self\",\"href\":\"http://localhost:%d/brands/%d\"}",randomServerPort, id), response.getBody());
+
+        Brand after = findById(id);
+
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
+
+        assertNotEquals(before.getName(), responseBody.get("name"));
+        assertNotNull(before.getDescription());
+
+        assertEquals(after.getName(), newName);
+        assertNull(after.getDescription());
     }
 }

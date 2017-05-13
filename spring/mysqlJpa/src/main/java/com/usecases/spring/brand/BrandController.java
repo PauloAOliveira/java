@@ -28,6 +28,12 @@ public class BrandController {
         return ResponseEntity.ok(rep);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Link> update(@PathVariable Long id, @RequestBody @Validated BrandRepresentation brand) {
+        brandService.update(id, brand);
+        return ResponseEntity.status(HttpStatus.OK).body(getLinkById(id));
+    }
+
     private Link getLinkById(Long id) {
         return ControllerLinkBuilder.linkTo(BrandController.class).slash(id).withSelfRel();
     }

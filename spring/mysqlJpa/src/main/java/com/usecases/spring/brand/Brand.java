@@ -38,4 +38,9 @@ public class Brand extends AbstractEntity {
         brand.setDescription(representation.getDescription());
         return brand;
     }
+
+    public void setFrom(BrandRepresentation from) {
+        setName(from.getName());
+        setDescription(from.getDescription());
+    }
 }

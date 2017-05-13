@@ -10,6 +10,8 @@ import java.util.Optional;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class BrandServiceTest {
@@ -83,5 +85,39 @@ public class BrandServiceTest {
         when(brandRepository.findOne(anyLong())).thenReturn(Optional.empty());
 
         brandService.getById(faker.number().randomNumber());
+    }
+
+    @Test(expected = BrandNotFoundException.class)
+    public void updateNonExistingBrand() {
+        Long id = faker.number().randomNumber();
+        when(brandRepository.findOne(anyLong())).thenReturn(Optional.empty());
+
+        brandService.update(id, new BrandRepresentation());
+    }
+
+    @Test
+    public void updateBrand() {
+        Long id = faker.number().randomNumber();
+        String name = faker.lorem().characters(2, 15);
+        String description = faker.lorem().characters(10, 200);
+
+        BrandRepresentation representation = new BrandRepresentation();
+        representation.setDescription(description);
+        representation.setName(name);
+
+        Brand brand = new Brand();
+        brand.setName(faker.lorem().characters(2, 15));
+        brand.setDescription(faker.lorem().characters(10, 200));
+        brand.setId(id);
+
+        when(brandRepository.findOne(eq(id))).thenReturn(Optional.of(brand));
+
+        brandService.update(id, representation);
+
+        verify(brandRepository, times(1)).save(eq(brand));
+
+        assertEquals(id, brand.getId());
+        assertEquals(name, brand.getName());
+        assertEquals(description, brand.getDescription());
     }
 }

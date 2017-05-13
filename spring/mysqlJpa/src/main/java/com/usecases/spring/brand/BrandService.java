@@ -18,4 +18,10 @@ public class BrandService {
     public Brand getById(Long id) {
         return brandRepository.findOne(id).orElseThrow(BrandNotFoundException::new);
     }
+
+    public void update(Long id, BrandRepresentation representation) {
+        Brand brand = getById(id);
+        brand.setFrom(representation);
+        brandRepository.save(brand);
+    }
 }
