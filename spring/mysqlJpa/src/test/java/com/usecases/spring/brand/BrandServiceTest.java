@@ -40,9 +40,7 @@ public class BrandServiceTest {
         String name = faker.lorem().characters(2, 15);
         String description = faker.lorem().characters(10, 200);
 
-        BrandRepresentation rep = new BrandRepresentation();
-        rep.setName(name);
-        rep.setDescription(description);
+        BrandRepresentation rep = BrandRepresentation.of(name, description);
 
         Brand brand = new Brand();
         brand.setId(id);
@@ -62,22 +60,14 @@ public class BrandServiceTest {
     @Test
     public void getById() {
         Long id = faker.number().randomNumber();
-        String name = faker.lorem().characters(2, 15);
-        String description = faker.lorem().characters(10, 200);
 
         Brand brand = new Brand();
-        brand.setId(id);
-        brand.setName(name);
-        brand.setDescription(description);
 
         when(brandRepository.findOne(eq(id))).thenReturn(Optional.of(brand));
 
         Brand resp = brandService.getById(id);
 
         assertEquals(brand, resp);
-        assertEquals(id, resp.getId());
-        assertEquals(description, resp.getDescription());
-        assertEquals(name, resp.getName());
     }
 
     @Test(expected = BrandNotFoundException.class)
@@ -92,7 +82,7 @@ public class BrandServiceTest {
         Long id = faker.number().randomNumber();
         when(brandRepository.findOne(anyLong())).thenReturn(Optional.empty());
 
-        brandService.update(id, new BrandRepresentation());
+        brandService.update(id, BrandRepresentation.of("name", "description"));
     }
 
     @Test
@@ -101,9 +91,7 @@ public class BrandServiceTest {
         String name = faker.lorem().characters(2, 15);
         String description = faker.lorem().characters(10, 200);
 
-        BrandRepresentation representation = new BrandRepresentation();
-        representation.setDescription(description);
-        representation.setName(name);
+        BrandRepresentation representation = BrandRepresentation.of(name, description);
 
         Brand brand = new Brand();
         brand.setName(faker.lorem().characters(2, 15));

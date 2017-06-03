@@ -1,5 +1,6 @@
 package com.usecases.spring.brand;
 
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.ResourceSupport;
 
 import javax.validation.constraints.NotNull;
@@ -18,7 +19,7 @@ public class BrandRepresentation extends ResourceSupport{
         return name;
     }
 
-    public void setName(String name) {
+    private void setName(String name) {
         this.name = name;
     }
 
@@ -26,7 +27,7 @@ public class BrandRepresentation extends ResourceSupport{
         return description;
     }
 
-    public void setDescription(String description) {
+    private void setDescription(String description) {
         this.description = description;
     }
 
@@ -34,6 +35,13 @@ public class BrandRepresentation extends ResourceSupport{
         BrandRepresentation rep = new BrandRepresentation();
         rep.setName(brand.getName());
         rep.setDescription(brand.getDescription());
+        return rep;
+    }
+
+    protected static BrandRepresentation of(String name, String description) {
+        BrandRepresentation rep = new BrandRepresentation();
+        rep.setName(name);
+        rep.setDescription(description);
         return rep;
     }
 }

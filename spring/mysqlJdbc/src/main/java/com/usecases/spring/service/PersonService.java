@@ -20,9 +20,10 @@ public class PersonService {
     private PersonRepository personRepository;
 
     public PersonRepresentation getById(Long id) {
-        Person p = personRepository.getById(id)
+        return personRepository
+                .getById(id)
+                .map(PersonRepresentation::of)
                 .orElseThrow(PersonNotFoundException::new);
-        return PersonRepresentation.of(p);
     }
 
     public Long save(Person person){

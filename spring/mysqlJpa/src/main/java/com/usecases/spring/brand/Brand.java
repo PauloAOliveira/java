@@ -1,10 +1,13 @@
 package com.usecases.spring.brand;
 
+import com.usecases.spring.car.Car;
 import com.usecases.spring.domain.AbstractEntity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import java.util.List;
 
 @Entity
 @Table(name = "brand")
@@ -15,6 +18,9 @@ public class Brand extends AbstractEntity {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @OneToMany(mappedBy = "brand")
+    private List<Car> cars;
 
     public String getName() {
         return name;

@@ -1,24 +1,14 @@
 package com.usecases.spring.brand;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.github.javafaker.Faker;
-import com.usecases.spring.exception.RestExceptionHandler;
+import com.usecases.spring.UtilsTest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import java.util.Locale;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Matchers.any;
@@ -44,21 +34,7 @@ public class BrandControllerTest {
     public void setup() {
         faker = new Faker();
         MockitoAnnotations.initMocks(this);
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true);
-        objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-        objectMapper.setLocale(Locale.US);
-        objectMapper.registerModule(new ParameterNamesModule());
-        objectMapper.registerModule(new Jdk8Module());
-        objectMapper.registerModule(new JavaTimeModule());
-
-        MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter = new MappingJackson2HttpMessageConverter();
-        mappingJackson2HttpMessageConverter.setObjectMapper(objectMapper);
-
-        mockMvc = MockMvcBuilders.standaloneSetup(brandController)
-                .setControllerAdvice(new RestExceptionHandler())
-                .setMessageConverters(mappingJackson2HttpMessageConverter)
-                .build();
+        mockMvc = UtilsTest.getControllerMockMvc(brandController);
     }
 
     @Test
