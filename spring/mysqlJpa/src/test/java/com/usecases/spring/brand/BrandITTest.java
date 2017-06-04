@@ -23,6 +23,7 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -107,11 +108,12 @@ public class BrandITTest {
         assertEquals(before.getName(), after.get("name"));
         assertEquals(before.getDescription(), after.get("description"));
 
-        Map<String, Object> links = (Map<String, Object>) after.get("_links");
+        List<Map<String, Object>> links = (List<Map<String, Object>>) after.get("links");
         assertEquals(1, links.size());
 
-        Map<String, String> link = (Map<String, String>) links.get("self");
-        assertEquals(1, link.size());
+        Map<String, Object> link = links.get(0);
+        assertEquals(2, link.size());
+        assertEquals("self", link.get("rel"));
         assertEquals(String.format("http://localhost:%d/brands/%d",randomServerPort, id), link.get("href"));
     }
 

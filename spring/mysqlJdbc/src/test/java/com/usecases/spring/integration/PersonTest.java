@@ -232,11 +232,12 @@ public class PersonTest {
         assertEquals(before.getCreated().toString(), after.get("created").toString());
         assertEquals(before.getLastUpdate().toString(), after.get("lastUpdate").toString());
 
-        Map<String, Object> links = (Map<String, Object>) after.get("_links");
+        List<Map<String, Object>> links = (List<Map<String, Object>>) after.get("links");
         assertEquals(1, links.size());
 
-        Map<String, String> link = (Map<String, String>) links.get("self");
-        assertEquals(1, link.size());
+        Map<String, Object> link = links.get(0);
+        assertEquals(2, link.size());
+        assertEquals("self", link.get("rel"));
         assertEquals("http://localhost:"+randomServerPort+"/people/6", link.get("href"));
     }
 

@@ -5,6 +5,8 @@ import com.usecases.spring.car.CarController;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
+
 public class LinkBuilder {
 
     private LinkBuilder(){}
@@ -14,10 +16,10 @@ public class LinkBuilder {
     }
 
     public static Link carLink(Long id) {
-        return idLink(CarController.class, id);
+        return linkTo(methodOn(CarController.class).getById(id)).withSelfRel();
     }
 
     private static <T> Link idLink(Class<?> clazz, T id) {
-        return ControllerLinkBuilder.linkTo(clazz).slash(id).withSelfRel();
+        return linkTo(clazz).slash(id).withSelfRel();
     }
 }

@@ -16,13 +16,13 @@ public class CarController {
     private CarService carService;
 
     @PostMapping("/brands/{brandId}/cars")
-    public ResponseEntity<Link> save(Long brandId, @Validated @RequestBody CarRepresentation car) {
+    public ResponseEntity<Link> save(@PathVariable  Long brandId, @Validated @RequestBody CarRepresentation car) {
         Long id = carService.save(brandId, car);
         return ResponseEntity.status(HttpStatus.CREATED).body(carLink(id));
     }
 
     @GetMapping("/cars/{id}")
-    public ResponseEntity<CarRepresentation> getById(@PathVariable Long id) {
+    public ResponseEntity<CarRepresentation> getById(@PathVariable("id") Long id) {
         CarRepresentation rep = CarRepresentation.of(carService.getById(id));
         rep.add(carLink(id));
         return ResponseEntity.ok(rep);

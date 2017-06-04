@@ -10,8 +10,12 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.hasSize;
+import java.time.LocalDate;
+
+import static org.hamcrest.Matchers.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -102,6 +106,29 @@ public class CarControllerTest {
 
     @Test
     public void createCar() throws Exception {
+        String name = faker.lorem().characters(5, 15);
+        Long carId = faker.number().randomNumber();
+        Integer numberDoors = faker.number().numberBetween(2, 5);
+        String color = faker.color().name();
+        Integer manufactureYear = faker.number().numberBetween(1970, LocalDate.now().getYear());
+        Boolean airbags = faker.bool().bool();
+        String engine = faker.commerce().price(1d, 5d).replace(",", ".");
 
+        String json = String.format("{" +
+                        "\"airbags\":%s," +
+                        "\"name\":\"%s\"," +
+                        "\"numberDoors\":%d," +
+                        "\"color\":\"%s\"," +
+                        "\"manufactureYear\":%d," +
+                        "\"engine\":\"%s\""+
+                        "}", airbags, name, numberDoors, color, manufactureYear, engine);
+
+        when(carService.save(eq(1L), any(CarRepresentation.class))).thenReturn(carId);
+
+        mockMvc.perform(
+                post("/brands/{brandId}/cars", 1L).contentType(MediaType.APPLICATION_JSON).content(json)
+        ).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.href", is("http://localhost/cars/"+carId)))
+                .andExpect(jsonPath("$.rel", is("self")));
     }
 }
