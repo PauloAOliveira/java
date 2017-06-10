@@ -31,7 +31,7 @@ public class Car extends AbstractEntity {
     @Column(nullable = false)
     private Boolean airbags;
 
-    @Column(precision = 1, scale = 1)
+    @Column(precision = 2, scale = 1)
     private BigDecimal engine;
 
     public Brand getBrand() {

@@ -8,7 +8,7 @@
 
     <name>mysql com Jpa</name>
 
-    <parent>
+     <parent>
         <groupId>com.usecases.spring</groupId>
         <artifactId>spring-boot-parent</artifactId>
         <version>0.0.1</version>

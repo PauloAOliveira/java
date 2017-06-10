@@ -23,6 +23,9 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
@@ -50,11 +53,20 @@ public class BrandITTest {
 
     private HttpHeaders httpHeaders;
 
+    private DateTimeFormatter pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     private RowMapper<Brand> mapper = (resultSet, i) -> {
         Brand brand = new Brand();
         brand.setId(resultSet.getLong("id"));
         brand.setName(resultSet.getString("name"));
         brand.setDescription(resultSet.getString("description"));
+
+        String createdDate = resultSet.getString("created_date").replaceAll("\\.[^.]*$", "");
+        String modifiedDate = resultSet.getString("modified_date").replaceAll("\\.[^.]*$", "");
+
+        brand.setCreatedDate(LocalDateTime.parse(createdDate, pattern));
+        brand.setModifiedDate(LocalDateTime.parse(modifiedDate, pattern));
+
         return brand;
     };
 
@@ -89,6 +101,8 @@ public class BrandITTest {
         Brand after = findById(id);
         assertEquals(name, after.getName());
         assertEquals(description, after.getDescription());
+        assertEquals(LocalDateTime.now().truncatedTo(ChronoUnit.HOURS), after.getCreatedDate().truncatedTo(ChronoUnit.HOURS));
+        assertEquals(LocalDateTime.now().truncatedTo(ChronoUnit.HOURS), after.getModifiedDate().truncatedTo(ChronoUnit.HOURS));
 
         assertEquals("self", link.getRel());
         assertEquals(String.format("http://localhost:%d/brands/%d",randomServerPort, after.getId()), link.getHref());
@@ -156,6 +170,8 @@ public class BrandITTest {
         assertNotEquals(before.getDescription(), responseBody.get("description"));
         assertEquals(after.getName(), newName);
         assertEquals(after.getDescription(), newDescription);
+        assertEquals(LocalDateTime.of(2017,3,3,3,3,3), after.getCreatedDate());
+        assertEquals(LocalDateTime.now().truncatedTo(ChronoUnit.HOURS), after.getModifiedDate().truncatedTo(ChronoUnit.HOURS));
     }
 
     @SuppressWarnings("unchecked")
