@@ -5,8 +5,6 @@ import com.usecases.spring.domain.AbstractEntity;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.TreeSet;
 
 @Entity
 @Table(name = "car")
@@ -33,6 +31,9 @@ public class Car extends AbstractEntity {
 
     @Column(precision = 2, scale = 1)
     private BigDecimal engine;
+
+    @Version
+    private Long version;
 
     public Brand getBrand() {
         return brand;
@@ -90,6 +91,14 @@ public class Car extends AbstractEntity {
         this.engine = engine;
     }
 
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
     public static Car of(CarRepresentation carRepresentation, Brand brand) {
         Car car = new Car();
         car.setBrand(brand);
@@ -99,6 +108,15 @@ public class Car extends AbstractEntity {
         car.setManufactureYear(carRepresentation.getManufactureYear());
         car.setAirbags(carRepresentation.getAirbags());
         car.setEngine(carRepresentation.getEngine());
+        car.setVersion(carRepresentation.getVersion());
         return car;
     }
+
+    public static Car of(Car car, CarRepresentation carRepresentation) {
+        Car other = of(carRepresentation, car.getBrand());
+        other.setId(car.getId());
+        other.setCreatedDate(car.getCreatedDate());
+        return other;
+    }
+
 }

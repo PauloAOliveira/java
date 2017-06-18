@@ -15,8 +15,11 @@ import java.time.LocalDate;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -130,5 +133,102 @@ public class CarControllerTest {
         ).andExpect(status().isCreated())
                 .andExpect(jsonPath("$.href", is("http://localhost/cars/"+carId)))
                 .andExpect(jsonPath("$.rel", is("self")));
+    }
+
+    @Test
+    public void updateCarAllParamsNull() throws Exception{
+        mockMvc.perform(
+                put("/cars/{id}", 1L).contentType(MediaType.APPLICATION_JSON).content("{}")
+        ).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors", hasSize(7)))
+                .andExpect(jsonPath("$.errors[*].error", containsInAnyOrder(
+                        "name:may not be null",
+                        "numberDoors:may not be null",
+                        "color:may not be null",
+                        "manufactureYear:may not be null",
+                        "airbags:may not be null",
+                        "engine:may not be null",
+                        "version:may not be null"
+                )));
+    }
+
+    @Test
+    public void updateCarMinValues() throws Exception {
+        String json = "" +
+                "{" +
+                "\"airbags\":false," +
+                "\"name\":\"a\"," +
+                "\"numberDoors\":1," +
+                "\"color\":\"c\"," +
+                "\"manufactureYear\":1969," +
+                "\"engine\":0.9," +
+                "\"version\":0"+
+                "}";
+
+        mockMvc.perform(
+                put("/cars/{id}", 1L).contentType(MediaType.APPLICATION_JSON).content(json)
+        ).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors", hasSize(5)))
+                .andExpect(jsonPath("$.errors[*].error", containsInAnyOrder(
+                        "name:size must be between 5 and 15",
+                        "color:size must be between 3 and 15",
+                        "engine:must be greater than or equal to 1.0",
+                        "manufactureYear:must be greater than or equal to 1970",
+                        "numberDoors:must be greater than or equal to 2"
+                )));
+    }
+
+    @Test
+    public void updateCarMaxValues() throws Exception {
+        String json = String.format("{" +
+                        "\"airbags\":false," +
+                        "\"name\":\"%s\"," +
+                        "\"numberDoors\":6," +
+                        "\"color\":\"%s\"," +
+                        "\"manufactureYear\":9999," +
+                        "\"engine\":5.1,"+
+                        "\"version\":0"+
+                        "}", faker.lorem().characters(16),
+                faker.lorem().characters(16));
+
+        mockMvc.perform(
+                put("/cars/{id}", 1L).contentType(MediaType.APPLICATION_JSON).content(json)
+        ).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors", hasSize(4)))
+                .andExpect(jsonPath("$.errors[*].error", containsInAnyOrder(
+                        "name:size must be between 5 and 15",
+                        "color:size must be between 3 and 15",
+                        "engine:must be less than or equal to 5.0",
+                        "numberDoors:must be less than or equal to 5"
+                )));
+    }
+
+    @Test
+    public void updateCar() throws Exception {
+        String name = faker.lorem().characters(5, 15);
+        Long carId = faker.number().randomNumber();
+        Integer numberDoors = faker.number().numberBetween(2, 5);
+        String color = faker.color().name();
+        Integer manufactureYear = faker.number().numberBetween(1970, LocalDate.now().getYear());
+        Boolean airbags = faker.bool().bool();
+        String engine = faker.commerce().price(1d, 5d).replace(",", ".");
+
+        String json = String.format("{" +
+                "\"airbags\":%s," +
+                "\"name\":\"%s\"," +
+                "\"numberDoors\":%d," +
+                "\"color\":\"%s\"," +
+                "\"manufactureYear\":%d," +
+                "\"engine\":\"%s\","+
+                "\"version\":0"+
+                "}", airbags, name, numberDoors, color, manufactureYear, engine);
+
+        mockMvc.perform(
+                put("/cars/{id}", carId).contentType(MediaType.APPLICATION_JSON).content(json)
+        ).andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.href", is("http://localhost/cars/"+carId)))
+                .andExpect(jsonPath("$.rel", is("self")));
+
+        verify(carService, times(1)).update(eq(carId), any(CarRepresentation.class));
     }
 }

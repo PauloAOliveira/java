@@ -1,6 +1,8 @@
 package com.usecases.spring.car;
 
 import com.usecases.spring.utils.LinkBuilder;
+import com.usecases.spring.validator.groups.Create;
+import com.usecases.spring.validator.groups.Update;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.ResourceSupport;
 
@@ -11,30 +13,33 @@ public class CarRepresentation extends ResourceSupport {
 
     private Link brand;
 
-    @NotNull
-    @Size(min = 5, max = 15)
+    @NotNull(groups = {Create.class, Update.class})
+    @Size(min = 5, max = 15, groups = {Create.class, Update.class})
     private String name;
 
-    @NotNull
-    @Max(value = 5)
-    @Min(value = 2)
+    @NotNull(groups = {Create.class, Update.class})
+    @Max(value = 5, groups = {Create.class, Update.class})
+    @Min(value = 2, groups = {Create.class, Update.class})
     private Integer numberDoors;
 
-    @NotNull
-    @Size(min = 3, max = 15)
+    @NotNull(groups = {Create.class, Update.class})
+    @Size(min = 3, max = 15, groups = {Create.class, Update.class})
     private String color;
 
-    @NotNull
-    @Min(value = 1970)
+    @NotNull(groups = {Create.class, Update.class})
+    @Min(value = 1970, groups = {Create.class, Update.class})
     private Integer manufactureYear;
 
-    @NotNull
+    @NotNull(groups = {Create.class, Update.class})
     private Boolean airbags;
 
-    @NotNull
-    @DecimalMin(value = "1.0")
-    @DecimalMax(value = "5.0")
+    @NotNull(groups = {Create.class, Update.class})
+    @DecimalMin(value = "1.0", groups = {Create.class, Update.class})
+    @DecimalMax(value = "5.0", groups = {Create.class, Update.class})
     private BigDecimal engine;
+
+    @NotNull(groups = {Update.class})
+    private Long version;
 
     public Link getBrand() {
         return brand;
@@ -92,6 +97,14 @@ public class CarRepresentation extends ResourceSupport {
         this.engine = engine;
     }
 
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
     public static CarRepresentation of(Car car) {
         CarRepresentation representation = new CarRepresentation();
         representation.setAirbags(car.getAirbags());
@@ -101,6 +114,7 @@ public class CarRepresentation extends ResourceSupport {
         representation.setManufactureYear(car.getManufactureYear());
         representation.setName(car.getName());
         representation.setNumberDoors(car.getNumberDoors());
+        representation.setVersion(car.getVersion());
 
         return representation;
     }
