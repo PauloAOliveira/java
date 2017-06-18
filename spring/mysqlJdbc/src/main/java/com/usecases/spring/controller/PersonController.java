@@ -2,9 +2,9 @@ package com.usecases.spring.controller;
 
 import com.usecases.spring.domain.Person;
 import com.usecases.spring.domain.PersonRepresentation;
-import com.usecases.spring.domain.groups.Create;
-import com.usecases.spring.domain.groups.Update;
 import com.usecases.spring.service.PersonService;
+import com.usecases.spring.validator.groups.Create;
+import com.usecases.spring.validator.groups.Update;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;

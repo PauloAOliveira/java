@@ -1,8 +1,8 @@
 package com.usecases.spring.domain;
 
-import com.usecases.spring.domain.groups.Create;
-import com.usecases.spring.domain.groups.Update;
 import com.usecases.spring.validator.constraint.Past;
+import com.usecases.spring.validator.groups.Create;
+import com.usecases.spring.validator.groups.Update;
 import org.hibernate.validator.constraints.Email;
 
 import javax.validation.constraints.NotNull;
