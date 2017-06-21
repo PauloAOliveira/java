@@ -18,7 +18,7 @@ public class CarController {
     private CarService carService;
 
     @PostMapping("/brands/{brandId}/cars")
-    public ResponseEntity<Link> save(@PathVariable  Long brandId, @Validated(Create.class) @RequestBody CarRepresentation car) {
+    public ResponseEntity<Link> save(@PathVariable  Long brandId, @RequestBody CarRepresentation car) {
         Long id = carService.save(brandId, car);
         return ResponseEntity.status(HttpStatus.CREATED).body(carLink(id));
     }

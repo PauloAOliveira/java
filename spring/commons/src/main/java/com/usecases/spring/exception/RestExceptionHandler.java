@@ -7,7 +7,9 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.ConstraintViolationException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,6 +23,16 @@ public class RestExceptionHandler {
     public ResponseEntity<Errors> handle(Exception e) {
         Errors errors = new Errors(Arrays.asList(new Error(e.getMessage())));
         return new ResponseEntity(errors, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler({ConstraintViolationException.class})
+    public ResponseEntity<Errors> handle(ConstraintViolationException e) {
+        List<Error> errors = e.getConstraintViolations().stream().map(cv -> {
+            String msg = cv.getMessage();
+            String field = cv.getPropertyPath().toString().replaceAll(".*\\.", "");
+            return new Error(String.format("%s:%s", field, msg));
+        }).collect(Collectors.toList());
+        return new ResponseEntity<>(new Errors(errors), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler({MethodArgumentNotValidException.class})

@@ -103,6 +103,12 @@ public class CarITTest {
     }
 
     @Test
+    public void t() {
+        ResponseEntity<String> response = restTemplate.exchange("/brands/{brandId}/cars", HttpMethod.POST, new HttpEntity<>("{}", httpHeaders), String.class, 1L);
+        System.out.println(response.getBody());
+    }
+
+    @Test
     public void createCar() {
         String name = faker.lorem().characters(5, 10);
         Integer numberDoors = faker.number().numberBetween(2, 5);
