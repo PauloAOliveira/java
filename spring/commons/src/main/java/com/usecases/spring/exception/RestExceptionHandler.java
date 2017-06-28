@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,8 +20,8 @@ public class RestExceptionHandler {
 
     @ExceptionHandler({Exception.class})
     public ResponseEntity<Errors> handle(Exception e) {
-        Errors errors = new Errors(Arrays.asList(new Error(e.getMessage())));
-        return new ResponseEntity(errors, HttpStatus.INTERNAL_SERVER_ERROR);
+        Errors errors = new Errors(Collections.singletonList(new Error(e.getMessage())));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errors);
     }
 
     @ExceptionHandler({MethodArgumentNotValidException.class})
@@ -30,15 +31,13 @@ public class RestExceptionHandler {
         List<Error> errors = requestErrors.stream().map(
                 er -> new Error(String.format("%s:%s", er.getField(), er.getDefaultMessage())))
                 .collect(Collectors.toList());
-
-        return new ResponseEntity<>(new Errors(errors), HttpStatus.BAD_REQUEST);
+        return ResponseEntity.badRequest().body(new Errors(errors));
     }
 
     @ExceptionHandler({BaseException.class})
     public ResponseEntity<Errors> handle(BaseException e) {
         ResponseStatus responseStatus = AnnotationUtils.findAnnotation(e.getClass(), ResponseStatus.class);
         HttpStatus status = responseStatus.value();
-
-        return new ResponseEntity<>(new Errors(Arrays.asList(new Error(e.getMessage()))), status);
+        return ResponseEntity.status(status).body(new Errors(Collections.singletonList(new Error(e.getMessage()))));
     }
 }
