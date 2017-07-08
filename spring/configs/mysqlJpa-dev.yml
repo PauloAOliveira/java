@@ -3,10 +3,6 @@ spring:
       hibernate.ddl-auto: create-drop
       generate-ddl: false
       database: MYSQL
-      properties.org.hibernate.flushMode: MANUAL
-      flushMode: MANUAL
-      hibernate.flushMode: MANUAL
-      hibernate.flush-mode: MANUAL
   datasource:
     url: jdbc:mysql://localhost:3306/cars?serverTimezone=America/Sao_Paulo&useSSL=false
     username: root
