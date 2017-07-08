@@ -25,10 +25,4 @@ public class BrandService {
         brand.setFrom(representation);
         brandRepository.save(brand);
     }
-
-    @Transactional()
-    public void updateT(Long id) {
-        Brand brand = brandRepository.findOne(id).get();
-        brand.setDescription("testando");
-    }
 }

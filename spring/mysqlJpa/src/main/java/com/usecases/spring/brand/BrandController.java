@@ -36,10 +36,4 @@ public class BrandController {
         brandService.update(id, brand);
         return ResponseEntity.status(HttpStatus.OK).body(brandLink(id));
     }
-
-    @PutMapping("/t/{id}")
-    public ResponseEntity<Link> updateT(@PathVariable Long id) {
-        brandService.updateT(id);
-        return ResponseEntity.status(HttpStatus.OK).body(brandLink(id));
-    }
 }
