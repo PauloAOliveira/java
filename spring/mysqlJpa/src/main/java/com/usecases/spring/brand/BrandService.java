@@ -2,6 +2,7 @@ package com.usecases.spring.brand;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class BrandService {
@@ -23,5 +24,11 @@ public class BrandService {
         Brand brand = getById(id);
         brand.setFrom(representation);
         brandRepository.save(brand);
+    }
+
+    @Transactional()
+    public void updateT(Long id) {
+        Brand brand = brandRepository.findOne(id).get();
+        brand.setDescription("testando");
     }
 }
