@@ -1,88 +1,34 @@
 package com.usecases.spring.brand;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.javafaker.Faker;
-import com.usecases.spring.Commons;
-import com.usecases.spring.MysqlJpaApplication;
+import com.usecases.spring.IntegrationTest;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.embedded.LocalServerPort;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.hateoas.Link;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
-@Sql({"/data-test.sql"})
-@SpringBootTest(classes = {MysqlJpaApplication.class, Commons.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class BrandITTest {
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+public class BrandITTest extends IntegrationTest {
 
     @Autowired
-    private TestRestTemplate restTemplate;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @LocalServerPort
-    private int randomServerPort;
-
-    private Faker faker;
-
-    private HttpHeaders httpHeaders;
-
-    private DateTimeFormatter pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-    private RowMapper<Brand> mapper = (resultSet, i) -> {
-        Brand brand = new Brand();
-        brand.setId(resultSet.getLong("id"));
-        brand.setName(resultSet.getString("name"));
-        brand.setDescription(resultSet.getString("description"));
-
-        String createdDate = resultSet.getString("created_date").replaceAll("\\.[^.]*$", "");
-        String modifiedDate = resultSet.getString("modified_date").replaceAll("\\.[^.]*$", "");
-
-        brand.setCreatedDate(LocalDateTime.parse(createdDate, pattern));
-        brand.setModifiedDate(LocalDateTime.parse(modifiedDate, pattern));
-
-        return brand;
-    };
+    private BrandRepository brandRepository;
 
     @Before
     public void setup() {
-        faker = new Faker();
-        httpHeaders = new HttpHeaders();
-        httpHeaders.add("Content-Type", "application/json;charset=UTF-8");
-    }
-
-    private Brand findById(Long id ) {
-        return jdbcTemplate.queryForObject("select * from brand where id = ?", mapper, id);
+        setMockMvc();
     }
 
     @Test
-    public void createBrand() {
+    public void createBrand() throws Exception{
         String name = faker.lorem().characters(4, 20);
         String description = faker.lorem().characters(1, 300);
         String json = String.format(
@@ -91,83 +37,87 @@ public class BrandITTest {
                         "\"description\":\"%s\"" +
                         "}", name, description);
 
-        ResponseEntity<Link> response = restTemplate.exchange("/brands", HttpMethod.POST, new HttpEntity<>(json, httpHeaders), Link.class);
-        assertEquals(201, response.getStatusCodeValue());
-        Link link = response.getBody();
+        String responseString = mockMvc.perform(post("/brands")
+                .content(json).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("rel", is("self")))
+                .andExpect(jsonPath("href", notNullValue()))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-        String[] split = link.getHref().split("/");
+        Map<String, Object> response = parseResponse(responseString);
+
+        String href = response.get("href").toString();
+        String[] split = href.split("/");
         Long id = Long.valueOf(split[split.length-1]);
 
-        Brand after = findById(id);
+        Brand after = brandRepository.findOne(id).get();
         assertEquals(name, after.getName());
         assertEquals(description, after.getDescription());
         assertEquals(LocalDateTime.now().truncatedTo(ChronoUnit.HOURS), after.getCreatedDate().truncatedTo(ChronoUnit.HOURS));
         assertEquals(LocalDateTime.now().truncatedTo(ChronoUnit.HOURS), after.getModifiedDate().truncatedTo(ChronoUnit.HOURS));
 
-        assertEquals("self", link.getRel());
-        assertEquals(String.format("http://localhost:%d/brands/%d",randomServerPort, after.getId()), link.getHref());
+        assertEquals(String.format("http://localhost/brands/%d", after.getId()), href);
     }
 
     @SuppressWarnings("unchecked")
     @Test
-    public void getById() throws IOException {
+    public void getById() throws Exception {
         Long id = 1L;
-        Brand before = findById(id);
+        Brand before = brandRepository.findOne(id).get();
 
-        ResponseEntity<String> response = restTemplate.exchange("/brands/{brandId}", HttpMethod.GET, new HttpEntity<>(httpHeaders), String.class, id);
-        assertEquals(200, response.getStatusCodeValue());
-
-        Map<String, Object> after = objectMapper.readValue(response.getBody(), Map.class);
-
-        assertEquals(before.getName(), after.get("name"));
-        assertEquals(before.getDescription(), after.get("description"));
-
-        List<Map<String, Object>> links = (List<Map<String, Object>>) after.get("links");
-        assertEquals(1, links.size());
-
-        Map<String, Object> link = links.get(0);
-        assertEquals(2, link.size());
-        assertEquals("self", link.get("rel"));
-        assertEquals(String.format("http://localhost:%d/brands/%d",randomServerPort, id), link.get("href"));
+        mockMvc.perform(get("/brands/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("name", is(before.getName())))
+                .andExpect(jsonPath("description", is(before.getDescription())))
+                .andExpect(jsonPath("links", hasSize(1)))
+                .andExpect(jsonPath("links[0].rel", is("self")))
+                .andExpect(jsonPath("links[0].href", is("http://localhost/brands/1")));
     }
 
     @SuppressWarnings("unchecked")
     @Test
-    public void getByIdNotFound() throws IOException {
-        ResponseEntity<String> response = restTemplate.exchange("/brands/{brandId}", HttpMethod.GET, new HttpEntity<>(httpHeaders), String.class, 999L);
-        assertEquals(404, response.getStatusCodeValue());
-        assertEquals("{\"errors\":[{\"error\":\"Brand does not exist\"}]}", response.getBody());
+    public void getByIdNotFound() throws Exception {
+        mockMvc.perform(get("/brands/{id}", 999L))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("errors", hasSize(1)))
+                .andExpect(jsonPath("errors[0].error", is("Brand does not exist")));
     }
 
     @SuppressWarnings("unchecked")
     @Test
-    public void updateNotFound() throws IOException {
+    public void updateNotFound() throws Exception {
         String body = "{\"name\":\"any name\"}";
-        ResponseEntity<String> response = restTemplate.exchange("/brands/{brandId}", HttpMethod.PUT, new HttpEntity<>(body, httpHeaders), String.class, 999L);
-        assertEquals(404, response.getStatusCodeValue());
-        assertEquals("{\"errors\":[{\"error\":\"Brand does not exist\"}]}", response.getBody());
+
+        mockMvc.perform(put("/brands/{id}", 999L)
+                .content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("errors", hasSize(1)))
+                .andExpect(jsonPath("errors[0].error", is("Brand does not exist")));
     }
 
     @SuppressWarnings("unchecked")
     @Test
-    public void updateNameAndDescription() throws IOException {
+    public void updateNameAndDescription() throws Exception {
         Long id = 2L;
-        Brand before = findById(id);
+        Brand before = brandRepository.findOne(id).get();
 
         String newName = "updated name";
         String newDescription = "updated description";
 
         String body = String.format("{\"name\":\"%s\",\"description\":\"%s\"}", newName, newDescription);
-        ResponseEntity<String> response = restTemplate.exchange("/brands/{brandId}", HttpMethod.PUT, new HttpEntity<>(body, httpHeaders), String.class, id);
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals(String.format("{\"rel\":\"self\",\"href\":\"http://localhost:%d/brands/%d\"}",randomServerPort, id), response.getBody());
 
-        Brand after = findById(id);
+        mockMvc.perform(put("/brands/{id}", 2L)
+                .content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("rel", is("self")))
+                .andExpect(jsonPath("href", notNullValue()));
 
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
+        Brand after = brandRepository.findOne(id).get();
 
-        assertNotEquals(before.getName(), responseBody.get("name"));
-        assertNotEquals(before.getDescription(), responseBody.get("description"));
+        assertNotEquals(before.getName(), after.getName());
+        assertNotEquals(before.getDescription(), after.getDescription());
         assertEquals(after.getName(), newName);
         assertEquals(after.getDescription(), newDescription);
         assertEquals(LocalDateTime.of(2017,3,3,3,3,3), after.getCreatedDate());
@@ -176,22 +126,23 @@ public class BrandITTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void updateDescriptionToNull() throws IOException {
+    public void updateDescriptionToNull() throws Exception {
         Long id = 3L;
-        Brand before = findById(id);
+        Brand before = brandRepository.findOne(id).get();
 
         String newName = "updated name";
 
         String body = String.format("{\"name\":\"%s\"}", newName);
-        ResponseEntity<String> response = restTemplate.exchange("/brands/{brandId}", HttpMethod.PUT, new HttpEntity<>(body, httpHeaders), String.class, id);
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals(String.format("{\"rel\":\"self\",\"href\":\"http://localhost:%d/brands/%d\"}",randomServerPort, id), response.getBody());
 
-        Brand after = findById(id);
+        mockMvc.perform(put("/brands/{id}", 3L)
+                .content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("rel", is("self")))
+                .andExpect(jsonPath("href", notNullValue()));
 
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
+        Brand after = brandRepository.findOne(id).get();
 
-        assertNotEquals(before.getName(), responseBody.get("name"));
+        assertNotEquals(before.getName(), after.getName());
         assertNotNull(before.getDescription());
 
         assertEquals(after.getName(), newName);
