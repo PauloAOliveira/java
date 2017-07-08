@@ -4,6 +4,9 @@ spring:
       generate-ddl: false
       database: MYSQL
       properties.org.hibernate.flushMode: NEVER
+      flushMode: NEVER
+      hibernate.flushMode: NEVER
+      hibernate.flush-mode: NEVER
   datasource:
     url: jdbc:mysql://localhost:3306/cars?serverTimezone=America/Sao_Paulo&useSSL=false
     username: root
