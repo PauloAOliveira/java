@@ -19,6 +19,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class BrandITTest extends IntegrationTest {
 
+    private static final String ROOT_URL = "/brands";
+    private static final String ID_URL = ROOT_URL+"/{id}";
+
     @Autowired
     private BrandRepository brandRepository;
 
@@ -37,7 +40,7 @@ public class BrandITTest extends IntegrationTest {
                         "\"description\":\"%s\"" +
                         "}", name, description);
 
-        String responseString = mockMvc.perform(post("/brands")
+        String responseString = mockMvc.perform(post(ROOT_URL)
                 .content(json).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("rel", is("self")))
@@ -67,7 +70,7 @@ public class BrandITTest extends IntegrationTest {
         Long id = 1L;
         Brand before = brandRepository.findOne(id).get();
 
-        mockMvc.perform(get("/brands/{id}", id))
+        mockMvc.perform(get(ID_URL, id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("name", is(before.getName())))
                 .andExpect(jsonPath("description", is(before.getDescription())))
@@ -79,7 +82,7 @@ public class BrandITTest extends IntegrationTest {
     @SuppressWarnings("unchecked")
     @Test
     public void getByIdNotFound() throws Exception {
-        mockMvc.perform(get("/brands/{id}", 999L))
+        mockMvc.perform(get(ID_URL, 999L))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("errors", hasSize(1)))
                 .andExpect(jsonPath("errors[0].error", is("Brand does not exist")));
@@ -90,7 +93,7 @@ public class BrandITTest extends IntegrationTest {
     public void updateNotFound() throws Exception {
         String body = "{\"name\":\"any name\"}";
 
-        mockMvc.perform(put("/brands/{id}", 999L)
+        mockMvc.perform(put(ID_URL, 999L)
                 .content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("errors", hasSize(1)))
@@ -108,11 +111,11 @@ public class BrandITTest extends IntegrationTest {
 
         String body = String.format("{\"name\":\"%s\",\"description\":\"%s\"}", newName, newDescription);
 
-        mockMvc.perform(put("/brands/{id}", 2L)
+        mockMvc.perform(put(ID_URL, 2L)
                 .content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("rel", is("self")))
-                .andExpect(jsonPath("href", notNullValue()));
+                .andExpect(jsonPath("href", is("http://localhost/brands/2")));
 
         Brand after = brandRepository.findOne(id).get();
 
@@ -134,7 +137,7 @@ public class BrandITTest extends IntegrationTest {
 
         String body = String.format("{\"name\":\"%s\"}", newName);
 
-        mockMvc.perform(put("/brands/{id}", 3L)
+        mockMvc.perform(put(ID_URL, 3L)
                 .content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("rel", is("self")))

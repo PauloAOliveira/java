@@ -15,8 +15,8 @@ public class LinkBuilder {
         return idLink(BrandController.class, id);
     }
 
-    public static Link carLink(Long id) {
-        return linkTo(methodOn(CarController.class).getById(id)).withSelfRel();
+    public static Link carLink(Long id, Long brandId) {
+        return linkTo(methodOn(CarController.class).getById(brandId, id)).withSelfRel();
     }
 
     private static <T> Link idLink(Class<?> clazz, T id) {

@@ -131,14 +131,14 @@ public class CarControllerTest {
         mockMvc.perform(
                 post("/brands/{brandId}/cars", 1L).contentType(MediaType.APPLICATION_JSON).content(json)
         ).andExpect(status().isCreated())
-                .andExpect(jsonPath("$.href", is("http://localhost/cars/"+carId)))
+                .andExpect(jsonPath("$.href", is("http://localhost/brands/1/cars/"+carId)))
                 .andExpect(jsonPath("$.rel", is("self")));
     }
 
     @Test
     public void updateCarAllParamsNull() throws Exception{
         mockMvc.perform(
-                put("/cars/{id}", 1L).contentType(MediaType.APPLICATION_JSON).content("{}")
+                put("/brands/{brandId}/cars/{id}", 1L, 1L).contentType(MediaType.APPLICATION_JSON).content("{}")
         ).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors", hasSize(7)))
                 .andExpect(jsonPath("$.errors[*].error", containsInAnyOrder(
@@ -166,7 +166,7 @@ public class CarControllerTest {
                 "}";
 
         mockMvc.perform(
-                put("/cars/{id}", 1L).contentType(MediaType.APPLICATION_JSON).content(json)
+                put("/brands/{brandId}/cars/{id}", 1L, 1L).contentType(MediaType.APPLICATION_JSON).content(json)
         ).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors", hasSize(5)))
                 .andExpect(jsonPath("$.errors[*].error", containsInAnyOrder(
@@ -192,7 +192,7 @@ public class CarControllerTest {
                 faker.lorem().characters(16));
 
         mockMvc.perform(
-                put("/cars/{id}", 1L).contentType(MediaType.APPLICATION_JSON).content(json)
+                put("/brands/{brandId}/cars/{id}", 1L, 1L).contentType(MediaType.APPLICATION_JSON).content(json)
         ).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors", hasSize(4)))
                 .andExpect(jsonPath("$.errors[*].error", containsInAnyOrder(
@@ -224,9 +224,9 @@ public class CarControllerTest {
                 "}", airbags, name, numberDoors, color, manufactureYear, engine);
 
         mockMvc.perform(
-                put("/cars/{id}", carId).contentType(MediaType.APPLICATION_JSON).content(json)
-        ).andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.href", is("http://localhost/cars/"+carId)))
+                put("/brands/{brandId}/cars/{id}", 1L, carId).contentType(MediaType.APPLICATION_JSON).content(json)
+        ).andExpect(status().isOk())
+                .andExpect(jsonPath("$.href", is("http://localhost/brands/1/cars/"+carId)))
                 .andExpect(jsonPath("$.rel", is("self")));
 
         verify(carService, times(1)).update(eq(carId), any(CarRepresentation.class));
