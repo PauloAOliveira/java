@@ -1,5 +1,9 @@
 server:
   port: 8083
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8084
 spring:
   jpa:
       hibernate.ddl-auto: create-drop
