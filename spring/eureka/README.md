@@ -1,0 +1,1 @@
+Simple service registration using eureka

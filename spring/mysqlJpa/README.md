@@ -9,4 +9,5 @@ Project to exemplify spring and jpa features
 <li>Spring integration test</li>
 <li>Embedded database</li>
 <li>Application config on config server</li>
+<li>Service discovery</li>
 </ul>
