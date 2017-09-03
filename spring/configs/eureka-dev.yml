@@ -1,5 +1,9 @@
 server:
   port: 8084
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
 spring:
   jpa:
       hibernate.ddl-auto: create-drop
