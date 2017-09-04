@@ -12,11 +12,11 @@ public interface MysqlJdbcClient {
     Link createPerson(@RequestBody Person person);
 
     @PutMapping(value = "/people/{id}")
-    Link updatePerson(@PathVariable Long id, @RequestBody Person person);
+    Link updatePerson(@PathVariable("id") Long id, @RequestBody Person person);
 
     @GetMapping(value = "/people/{id}")
-    Person getById(@PathVariable Long id);
+    Person getById(@PathVariable("id") Long id);
 
     @DeleteMapping(value = "/people/{id}")
-    void deletePerson(@PathVariable Long id);
+    void deletePerson(@PathVariable("id") Long id);
 }
