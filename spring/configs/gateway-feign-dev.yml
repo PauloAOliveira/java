@@ -9,5 +9,5 @@ eureka:
 feign:
   client:
     config:
-      feignName:
+      default:
         errorDecoder: com.usecases.spring.gateway.config.ErrorDecoderImpl
