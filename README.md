@@ -1,1 +1,1 @@
-Repository to usecases of java technologies
+Repository to usecases of spring technologies
