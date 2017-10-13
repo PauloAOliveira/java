@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: mysqlJpa
+  cloud:
+    config:
+      uri: http://localhost:8081
